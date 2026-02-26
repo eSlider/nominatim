@@ -11,6 +11,12 @@ mkdir -p "$PBF_DIR"
 
 echo "$(date -Is) watcher started" >> "$LOG_FILE"
 
+if command -v nproc >/dev/null 2>&1; then
+    export THREADS
+    THREADS="$(nproc)"
+    echo "$(date -Is) set THREADS=$THREADS (osm2pgsql --number-processes)" >> "$LOG_FILE"
+fi
+
 while true; do
     ACTIVE_ARIA2=""
     for f in "$PBF_DIR"/planet-[0-9]*.osm.pbf.aria2; do

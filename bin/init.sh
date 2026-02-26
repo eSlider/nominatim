@@ -38,6 +38,13 @@ load_env() {
     source "$ENV_FILE"
 }
 
+set_threads_to_nproc() {
+    require_cmd nproc
+    export THREADS
+    THREADS="$(nproc)"
+    log "Set THREADS=$THREADS (osm2pgsql --number-processes)"
+}
+
 api_status_url() {
     local port="${NOMINATIM_PORT:-$API_PORT_DEFAULT}"
     echo "http://localhost:${port}/status"
@@ -109,6 +116,7 @@ main() {
     require_cmd docker
     require_cmd curl
     load_env
+    set_threads_to_nproc
 
     if api_ready; then
         log "API already ready at $(api_status_url)"

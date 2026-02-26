@@ -26,6 +26,13 @@ ensure_env() {
     source "$ENV_FILE"
 }
 
+set_threads_to_nproc() {
+    require_cmd nproc
+    export THREADS
+    THREADS="$(nproc)"
+    log "Set THREADS=$THREADS (osm2pgsql --number-processes)"
+}
+
 download_planet() {
     mkdir -p "$OSM_DIR"
     log "Starting/resuming torrent download for PG18 profile"
@@ -72,6 +79,7 @@ main() {
     require_cmd docker
     require_cmd curl
     ensure_env
+    set_threads_to_nproc
 
     mkdir -p "$PROJECT_DIR/var-pg18/lib/postgresql" "$PROJECT_DIR/var-pg18/nominatim/flatnode" "$PROJECT_DIR/var-pg18/osm"
 
