@@ -22,14 +22,18 @@ Including these in context will fail or produce garbage.
 - `docker-compose.yml` — service definition and volume mounts
 - `.env.example` — all available configuration variables
 - `bin/download-planet.sh` — planet download script
+- `bin/watch-download-start-import.sh` — watcher that polls every 10 min
 
 ## Key operations
 
 | Task | Command |
 |---|---|
 | Download planet | `bin/download-planet.sh` |
+| Download planet via torrent | `aria2c --seed-time=0 ... planet-latest.osm.pbf.torrent` |
+| Auto-start import after download | `bin/watch-download-start-import.sh` |
 | Start service | `docker compose up -d` |
 | View logs | `docker compose logs -f` |
+| View watcher logs | `tail -f var/osm/download-watch.log` |
 | Stop (keep data) | `docker compose stop` |
 | Check API | `curl http://localhost:8080/status` |
 | Enable updates | Set `UPDATE_MODE=continuous` in `.env`, then restart |

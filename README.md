@@ -26,7 +26,8 @@ sudo apt install -y aria2
 ├── docker-compose.yml        # Service definition
 ├── .env.example              # Configuration template
 ├── bin/
-│   └── download-planet.sh    # Planet PBF downloader (aria2)
+│   ├── download-planet.sh            # Direct HTTP downloader (aria2)
+│   └── watch-download-start-import.sh # 10-min watcher, auto-starts import
 ├── etc/
 │   └── nominatim/            # Config overrides (future use)
 └── var/                      # ⛔ gitignored — all runtime data
@@ -44,15 +45,39 @@ cp .env.example .env
 # Edit .env — at minimum change NOMINATIM_PASSWORD
 ```
 
-### 2. Download the planet file (~75 GB)
+### 2. Download the planet file (~85 GB)
 
 ```bash
-bin/download-planet.sh
+aria2c --seed-time=0 \
+  --check-integrity=true \
+  --file-allocation=none \
+  --continue=true \
+  --dir="$(pwd)/var/osm" \
+  --bt-max-peers=120 \
+  --max-overall-upload-limit=64K \
+  "https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf.torrent"
 ```
 
-The download is resumable. Re-run the script if it gets interrupted.
+The torrent download is resumable.
 
-### 3. Start the import
+### 3. Start the 10-minute watcher (recommended)
+
+```bash
+bin/watch-download-start-import.sh
+```
+
+The watcher checks every 10 minutes and automatically:
+- waits for `.aria2` marker disappearance (download complete),
+- links `var/osm/planet-latest.osm.pbf` to the completed dated file,
+- runs `docker compose up -d`.
+
+To run watcher in background:
+
+```bash
+nohup bin/watch-download-start-import.sh >/tmp/nominatim-watch.out 2>&1 &
+```
+
+### 4. Start the import manually (optional)
 
 ```bash
 docker compose up -d
@@ -64,7 +89,13 @@ Follow progress:
 docker compose logs -f
 ```
 
-### 4. Verify
+Check torrent progress:
+
+```bash
+ls -lh var/osm/*.aria2 var/osm/planet-*.osm.pbf
+```
+
+### 5. Verify
 
 Once the import finishes (expect 2–4 days for the full planet):
 
@@ -141,3 +172,6 @@ database caches on container start (increases startup time).
 **Resuming a failed import**: The container detects existing PostgreSQL data on
 start. If the import was interrupted, remove `var/lib/postgresql/` and restart
 from scratch.
+
+**Check watcher status**: `tail -f var/osm/download-watch.log` to see 10-minute
+polls and auto-start events.
