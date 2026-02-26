@@ -167,6 +167,27 @@ Apply these after initial import to minimize query tail latency:
 - Keep CPU governor in performance mode during heavy import and benchmark runs.
 - Avoid colocating other high-I/O jobs on the same disk while serving traffic.
 
+### Automated host tuning script
+
+Use the bundled script to inspect/apply low-latency host settings:
+
+```bash
+# show current values only
+bin/tune-low-latency.sh --status
+
+# apply runtime tuning (needs root)
+sudo bin/tune-low-latency.sh --apply
+```
+
+The script targets:
+- THP `enabled/defrag` -> `never`
+- CPU governor -> `performance`
+- `vm.swappiness=1`
+- `vm.dirty_background_bytes=268435456`
+- `vm.dirty_bytes=1073741824`
+
+These are runtime settings. Re-apply after reboot or persist them using your OS tooling.
+
 ### PostgreSQL I/O knobs to benchmark
 
 For latency-sensitive systems, benchmark these parameters (PostgreSQL runtime resource/I/O docs):

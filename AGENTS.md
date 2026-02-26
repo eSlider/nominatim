@@ -31,6 +31,8 @@ Including these in context will fail or produce garbage.
 | Download planet | `bin/download-planet.sh` |
 | Download planet via torrent | `aria2c --seed-time=0 ... planet-latest.osm.pbf.torrent` |
 | Auto-start import after download | `bin/watch-download-start-import.sh` |
+| Check low-latency host settings | `bin/tune-low-latency.sh --status` |
+| Apply low-latency host settings | `sudo bin/tune-low-latency.sh --apply` |
 | Start service | `docker compose up -d` |
 | View logs | `docker compose logs -f` |
 | View watcher logs | `tail -f var/osm/download-watch.log` |
