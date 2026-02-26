@@ -37,6 +37,8 @@ Including these in context will fail or produce garbage.
 | Build PG18 image | `bin/build-pg18-image.sh` |
 | Bootstrap PG18 profile | `bin/init-pg18.sh` |
 | Start PG18 profile manually | `docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d` |
+| Check PG18 API | `curl http://localhost:8081/status` |
+| Enable PG18 updates | Set `UPDATE_MODE=continuous` in `.env.pg18`, then restart PG18 compose |
 | Check low-latency host settings | `bin/tune-low-latency.sh --status` |
 | Apply low-latency host settings | `sudo bin/tune-low-latency.sh --apply` |
 | Start service | `docker compose up -d` |

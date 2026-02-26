@@ -154,6 +154,17 @@ The PG18 compose profile enables:
 - log rotation (`max-size`, `max-file`)
 - larger shared memory via `NOMINATIM_SHM_SIZE`
 
+### PG18 verification and updates
+
+```bash
+# verify PG18 profile health endpoint
+curl http://localhost:8081/status
+
+# enable replication updates for PG18 profile
+sed -i 's/^UPDATE_MODE=.*/UPDATE_MODE=continuous/' .env.pg18
+docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d
+```
+
 ## Enabling updates
 
 After the initial import completes, switch to continuous replication:
