@@ -121,6 +121,42 @@ curl "http://localhost:8080/search?q=Eiffel+Tower&format=jsonv2"
 curl "http://localhost:8080/reverse?lat=48.8584&lon=2.2945&format=jsonv2"
 ```
 
+### Using init scripts (automated bootstrap)
+
+Use these scripts if you want one command to run download + startup + readiness
+checks instead of running steps manually.
+
+#### `bin/init.sh` (PG16 profile)
+
+```bash
+bin/init.sh
+```
+
+What it does:
+- creates `.env` from `.env.example` if missing
+- exports `THREADS=$(nproc)` so osm2pgsql uses all host CPUs
+- downloads/resumes planet torrent into `var/osm/`
+- links `var/osm/planet-latest.osm.pbf` to the latest dated planet file
+- starts `docker compose` with `docker-compose.yml`
+- waits until `http://localhost:${NOMINATIM_PORT:-8080}/status` is ready
+
+#### `bin/init-pg18.sh` (PG18 profile)
+
+```bash
+bin/init-pg18.sh
+```
+
+What it does:
+- creates `.env.pg18` from `.env.pg18.example` if missing
+- exports `THREADS=$(nproc)` so osm2pgsql uses all host CPUs
+- creates required `var-pg18/` directories
+- downloads/resumes planet torrent into `var-pg18/osm/`
+- links `var-pg18/osm/planet-latest.osm.pbf` to the latest dated planet file
+- starts PG18 compose profile (`docker-compose.pg18.yml`)
+- waits until `http://localhost:${NOMINATIM_PORT:-8081}/status` is ready
+
+Both scripts require `aria2c`, `docker`, and `curl`.
+
 
 ## PostgreSQL 18 profile (migration path)
 
