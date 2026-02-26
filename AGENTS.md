@@ -36,12 +36,12 @@ Including these in context will fail or produce garbage.
 | Auto-start import after download | `bin/watch-download-start-import.sh` |
 | Build PG18 image | `bin/build-pg18-image.sh` (prints installed PostGIS package versions) |
 | Bootstrap PG18 profile | `bin/init-pg18.sh` |
-| Start PG18 profile manually | `docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d` |
+| Start PG18 profile manually | `THREADS=$(nproc) docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d` |
 | Check PG18 API | `curl http://localhost:8081/status` |
 | Enable PG18 updates | Set `UPDATE_MODE=continuous` in `.env.pg18`, then restart PG18 compose |
 | Check low-latency host settings | `bin/tune-low-latency.sh --status` |
 | Apply low-latency host settings | `sudo bin/tune-low-latency.sh --apply` |
-| Start service | `docker compose up -d` |
+| Start service | `THREADS=$(nproc) docker compose up -d` |
 | View logs | `docker compose logs -f` |
 | View watcher logs | `tail -f var/osm/download-watch.log` |
 | Stop (keep data) | `docker compose stop` |
@@ -71,3 +71,9 @@ recalculate:
 - `POSTGRES_SHARED_BUFFERS` = 25% of RAM
 - `POSTGRES_EFFECTIVE_CACHE_SIZE` = 75% of RAM
 - `shm_size` in `docker-compose.yml` = 50% of RAM
+
+## Architecture decision
+
+- Do not switch to a separate `postgis/postgis` DB container by default.
+- Keep the integrated Nominatim image model unless the user explicitly asks for
+  a split app+DB migration project.

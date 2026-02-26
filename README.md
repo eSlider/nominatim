@@ -46,6 +46,10 @@ sudo apt install -y aria2
 
 ```bash
 cp .env.example .env
+# Use all available CPUs for osm2pgsql (--number-processes)
+sed -i "s/^THREADS=.*/THREADS=$(nproc)/" .env
+# Keep all optional import datasets enabled
+sed -i "s/^IMPORT_US_POSTCODES=.*/IMPORT_US_POSTCODES=true/; s/^IMPORT_GB_POSTCODES=.*/IMPORT_GB_POSTCODES=true/" .env
 # Edit .env — at minimum change NOMINATIM_PASSWORD
 ```
 
@@ -73,7 +77,10 @@ bin/watch-download-start-import.sh
 The watcher checks every 10 minutes and automatically:
 - waits for `.aria2` marker disappearance (download complete),
 - links `var/osm/planet-latest.osm.pbf` to the completed dated file,
-- runs `docker compose up -d`.
+- runs `THREADS=$(nproc) docker compose up -d`.
+
+The watcher exports `THREADS=$(nproc)` before starting Compose so scripted
+imports use all available CPUs.
 
 To run watcher in background:
 
@@ -84,7 +91,7 @@ nohup bin/watch-download-start-import.sh >/tmp/nominatim-watch.out 2>&1 &
 ### 4. Start the import manually (optional)
 
 ```bash
-docker compose up -d
+THREADS=$(nproc) docker compose up -d
 ```
 
 Follow progress:
@@ -120,6 +127,17 @@ curl "http://localhost:8080/reverse?lat=48.8584&lon=2.2945&format=jsonv2"
 `docker-compose.pg18.yml` is an optimized migration profile that keeps your active
 PG16 deployment untouched. It uses separate state directories under `./var-pg18/`.
 
+### Decision: keep integrated DB image
+
+Even though `postgis/postgis:18-3.6-alpine` exists, this repository currently
+keeps the integrated Nominatim image approach (`mediagis/nominatim` or the
+derived `nominatim:5.2-pg18`) for operational simplicity.
+
+Reason: this codebase and scripts are designed around Nominatim owning PostgreSQL
+startup, config paths, and import lifecycle. Moving to a split app+DB container
+topology is possible, but it is a separate migration project and is intentionally
+not done by default here.
+
 ### Build PG18 image
 
 ```bash
@@ -146,7 +164,7 @@ bin/init-pg18.sh
 Or manually:
 
 ```bash
-docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d
+THREADS=$(nproc) docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d
 ```
 
 ### PG18 compose optimizations
@@ -166,7 +184,7 @@ curl http://localhost:8081/status
 
 # enable replication updates for PG18 profile
 sed -i 's/^UPDATE_MODE=.*/UPDATE_MODE=continuous/' .env.pg18
-docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d
+THREADS=$(nproc) docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d
 ```
 
 ## Enabling updates
@@ -179,7 +197,7 @@ After the initial import completes, switch to continuous replication:
    ```
 2. Restart:
    ```bash
-   docker compose up -d
+   THREADS=$(nproc) docker compose up -d
    ```
 
 ## Disk usage estimates (full planet)
@@ -273,14 +291,15 @@ Full API docs: https://nominatim.org/release-docs/latest/api/Overview/
 
 ```bash
 docker compose stop       # stop (preserves data)
-docker compose start      # restart
+THREADS=$(nproc) docker compose start      # restart
 ```
 
 Never use `docker compose down -v` — this destroys all imported data.
 
 ## Troubleshooting
 
-**Import killed by OOM**: Reduce `THREADS` or `POSTGRES_MAINTENANCE_WORK_MEM` in `.env`.
+**Import killed by OOM**: Reduce `THREADS` (osm2pgsql `--number-processes`) or
+`POSTGRES_MAINTENANCE_WORK_MEM` in `.env`.
 
 **Slow queries after restart**: Set `WARMUP_ON_STARTUP=true` in `.env` to preload
 database caches on container start (increases startup time).
