@@ -34,7 +34,7 @@ Including these in context will fail or produce garbage.
 | Download planet | `bin/download-planet.sh` |
 | Download planet via torrent | `aria2c --seed-time=0 ... planet-latest.osm.pbf.torrent` |
 | Auto-start import after download | `bin/watch-download-start-import.sh` |
-| Build PG18 image | `bin/build-pg18-image.sh` |
+| Build PG18 image | `bin/build-pg18-image.sh` (prints installed PostGIS package versions) |
 | Bootstrap PG18 profile | `bin/init-pg18.sh` |
 | Start PG18 profile manually | `docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d` |
 | Check PG18 API | `curl http://localhost:8081/status` |

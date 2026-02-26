@@ -127,7 +127,11 @@ bin/build-pg18-image.sh
 ```
 
 This builds `nominatim:5.2-pg18` by patching upstream `mediagis/nominatim-docker`
-for PostgreSQL 18 paths/packages.
+for PostgreSQL 18 paths/packages and prints installed PostGIS package versions.
+
+Example expected output includes:
+- `postgresql-18-postgis-3: 3.6.2...`
+- `postgresql-18-postgis-3-scripts: 3.6.2...`
 
 ### Configure and run PG18 profile
 

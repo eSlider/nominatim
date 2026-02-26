@@ -57,3 +57,7 @@ PY2
 
 docker build -t "$IMAGE_TAG" "$WORK_DIR/src"
 echo "Built image: $IMAGE_TAG"
+echo "Installed versions in image:"
+docker run --rm "$IMAGE_TAG" bash -lc "set -euo pipefail; \
+  echo -n '  postgresql-18-postgis-3: '; dpkg-query -W -f='\${Version}\n' postgresql-18-postgis-3; \
+  echo -n '  postgresql-18-postgis-3-scripts: '; dpkg-query -W -f='\${Version}\n' postgresql-18-postgis-3-scripts"
