@@ -27,11 +27,12 @@ import sys
 root = Path(sys.argv[1])
 osm2pgsql_version = sys.argv[2]
 
-for rel in ["Dockerfile", "config.sh"]:
+for rel in ["Dockerfile", "config.sh", "start.sh", "init.sh"]:
     p = root / rel
     s = p.read_text()
     s = s.replace("/postgresql/16/main", "/postgresql/18/main")
     s = s.replace("/var/lib/postgresql/16/main", "/var/lib/postgresql/18/main")
+    s = s.replace("/usr/lib/postgresql/16", "/usr/lib/postgresql/18")
     s = s.replace("postgresql-postgis-scripts", "postgresql-18-postgis-3-scripts")
     s = s.replace("postgresql-postgis", "postgresql-18-postgis-3")
     p.write_text(s)
