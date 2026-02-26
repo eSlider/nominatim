@@ -142,6 +142,42 @@ Key settings:
 - `POSTGRES_MAINTENANCE_WORK_MEM=10GB` — speeds up import
 - `shm_size=32g` — set in `docker-compose.yml`, half of RAM
 
+## Low-latency tuning checklist
+
+Apply these after initial import to minimize query tail latency:
+
+### Database and container
+
+- Keep flatnode enabled (`./var/nominatim/flatnode:/nominatim/flatnode`) for planet-scale data.
+- Keep `UPDATE_MODE=none` if you prioritize read latency over freshness.
+- Set `WARMUP_ON_STARTUP=true` in `.env` if restart-time warmup is acceptable.
+- Keep `POSTGRES_SHARED_BUFFERS` near 25% RAM and `POSTGRES_EFFECTIVE_CACHE_SIZE` near 75% RAM.
+- Tune `GUNICORN_WORKERS` explicitly (start with number of physical cores, then benchmark).
+
+### Host kernel and memory
+
+- Disable Transparent Huge Pages (THP); PostgreSQL docs warn THP can hurt latency.
+- Prefer explicit huge pages for PostgreSQL shared memory when available.
+- Avoid swap thrashing: keep swap small/emergency-only and set low swappiness.
+- Keep free page cache available; avoid memory overcommit from other heavy workloads.
+
+### Storage and CPU
+
+- Use local NVMe storage for `var/lib/postgresql` and `var/nominatim/flatnode`.
+- Keep CPU governor in performance mode during heavy import and benchmark runs.
+- Avoid colocating other high-I/O jobs on the same disk while serving traffic.
+
+### PostgreSQL I/O knobs to benchmark
+
+For latency-sensitive systems, benchmark these parameters (PostgreSQL runtime resource/I/O docs):
+
+- `effective_io_concurrency` (higher for fast NVMe, lower for slower media)
+- `bgwriter_flush_after`
+- `backend_flush_after`
+- `max_wal_size` (bigger can smooth checkpoints and reduce stalls)
+
+Benchmark changes under representative query load before keeping them.
+
 ## API endpoints
 
 | Endpoint | Description |

@@ -45,6 +45,14 @@ Including these in context will fail or produce garbage.
 - **Never** modify `.env` while the container is importing (restart required)
 - The initial planet import takes 2–4 days; do not interrupt it
 
+## Low-latency operations notes
+
+- Keep THP disabled on host systems serving production traffic.
+- Prefer explicit huge pages for PostgreSQL where possible.
+- Run latency-sensitive benchmarks with CPU governor set to performance.
+- Keep non-Nominatim I/O-heavy jobs off the same storage during serving.
+- Always validate tuning changes with real API workload before rollout.
+
 ## Modifying configuration
 
 All tuning is done through `.env` variables. The PostgreSQL parameters in
