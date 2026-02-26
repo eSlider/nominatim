@@ -45,6 +45,14 @@ set_threads_to_nproc() {
     log "Set THREADS=$THREADS (osm2pgsql --number-processes)"
 }
 
+set_default_import_datasets() {
+    export IMPORT_WIKIPEDIA IMPORT_US_POSTCODES IMPORT_GB_POSTCODES
+    IMPORT_WIKIPEDIA="true"
+    IMPORT_US_POSTCODES="true"
+    IMPORT_GB_POSTCODES="true"
+    log "Enabled import datasets: Wikipedia, US postcodes, GB postcodes"
+}
+
 api_status_url() {
     local port="${NOMINATIM_PORT:-$API_PORT_DEFAULT}"
     echo "http://localhost:${port}/status"
@@ -117,6 +125,7 @@ main() {
     require_cmd curl
     load_env
     set_threads_to_nproc
+    set_default_import_datasets
 
     if api_ready; then
         log "API already ready at $(api_status_url)"

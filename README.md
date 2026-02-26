@@ -46,10 +46,6 @@ sudo apt install -y aria2
 
 ```bash
 cp .env.example .env
-# Use all available CPUs for osm2pgsql (--number-processes)
-sed -i "s/^THREADS=.*/THREADS=$(nproc)/" .env
-# Keep all optional import datasets enabled
-sed -i "s/^IMPORT_US_POSTCODES=.*/IMPORT_US_POSTCODES=true/; s/^IMPORT_GB_POSTCODES=.*/IMPORT_GB_POSTCODES=true/" .env
 # Edit .env — at minimum change NOMINATIM_PASSWORD
 ```
 
@@ -135,6 +131,7 @@ bin/init.sh
 What it does:
 - creates `.env` from `.env.example` if missing
 - exports `THREADS=$(nproc)` so osm2pgsql uses all host CPUs
+- forces optional import datasets on (`IMPORT_WIKIPEDIA`, `IMPORT_US_POSTCODES`, `IMPORT_GB_POSTCODES`)
 - downloads/resumes planet torrent into `var/osm/`
 - links `var/osm/planet-latest.osm.pbf` to the latest dated planet file
 - starts `docker compose` with `docker-compose.yml`
@@ -149,6 +146,7 @@ bin/init-pg18.sh
 What it does:
 - creates `.env.pg18` from `.env.pg18.example` if missing
 - exports `THREADS=$(nproc)` so osm2pgsql uses all host CPUs
+- forces optional import datasets on (`IMPORT_WIKIPEDIA`, `IMPORT_US_POSTCODES`, `IMPORT_GB_POSTCODES`)
 - creates required `var-pg18/` directories
 - downloads/resumes planet torrent into `var-pg18/osm/`
 - links `var-pg18/osm/planet-latest.osm.pbf` to the latest dated planet file

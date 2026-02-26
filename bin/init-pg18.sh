@@ -33,6 +33,14 @@ set_threads_to_nproc() {
     log "Set THREADS=$THREADS (osm2pgsql --number-processes)"
 }
 
+set_default_import_datasets() {
+    export IMPORT_WIKIPEDIA IMPORT_US_POSTCODES IMPORT_GB_POSTCODES
+    IMPORT_WIKIPEDIA="true"
+    IMPORT_US_POSTCODES="true"
+    IMPORT_GB_POSTCODES="true"
+    log "Enabled import datasets: Wikipedia, US postcodes, GB postcodes"
+}
+
 download_planet() {
     mkdir -p "$OSM_DIR"
     log "Starting/resuming torrent download for PG18 profile"
@@ -80,6 +88,7 @@ main() {
     require_cmd curl
     ensure_env
     set_threads_to_nproc
+    set_default_import_datasets
 
     mkdir -p "$PROJECT_DIR/var-pg18/lib/postgresql" "$PROJECT_DIR/var-pg18/nominatim/flatnode" "$PROJECT_DIR/var-pg18/osm"
 

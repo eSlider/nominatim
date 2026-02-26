@@ -30,3 +30,5 @@ OSM PBF extracts, and flatnode files. They will break context windows.
 - PostgreSQL tuning is via environment variables, not config files
 - The container bundles PostgreSQL + Nominatim in one image
 - Import is triggered automatically on first `docker compose up`
+- Documentation changes (`README.md`, `AGENTS.md`, files under `docs/`) should
+  be committed and pushed when requested in the task flow

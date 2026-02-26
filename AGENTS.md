@@ -54,6 +54,8 @@ Including these in context will fail or produce garbage.
 - **Never** delete `var/lib/postgresql/` while the container is running
 - **Never** modify `.env` while the container is importing (restart required)
 - The initial planet import takes 2–4 days; do not interrupt it
+- Any documentation change (`README.md`, `AGENTS.md`, `docs/`) should be
+  committed and pushed when requested in the task flow
 
 ## Low-latency operations notes
 
