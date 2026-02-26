@@ -1,5 +1,6 @@
 # Data directories (large binary/DB files)
 var/
+var-pg18/
 
 # Environment config (may contain passwords)
 .env

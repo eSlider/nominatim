@@ -19,10 +19,13 @@ Including these in context will fail or produce garbage.
 ## Files to read
 
 - `README.md` — usage, quick start, tuning
-- `docker-compose.yml` — service definition and volume mounts
-- `.env.example` — all available configuration variables
+- `docker-compose.yml` — PG16 service definition
+- `docker-compose.pg18.yml` — PG18 migration profile (optimized)
+- `.env.example` / `.env.pg18.example` — profile configuration templates
 - `bin/download-planet.sh` — planet download script
 - `bin/watch-download-start-import.sh` — watcher that polls every 10 min
+- `bin/init-pg18.sh` — end-to-end PG18 bootstrap
+- `bin/build-pg18-image.sh` — build custom PG18 image
 
 ## Key operations
 
@@ -31,6 +34,9 @@ Including these in context will fail or produce garbage.
 | Download planet | `bin/download-planet.sh` |
 | Download planet via torrent | `aria2c --seed-time=0 ... planet-latest.osm.pbf.torrent` |
 | Auto-start import after download | `bin/watch-download-start-import.sh` |
+| Build PG18 image | `bin/build-pg18-image.sh` |
+| Bootstrap PG18 profile | `bin/init-pg18.sh` |
+| Start PG18 profile manually | `docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d` |
 | Check low-latency host settings | `bin/tune-low-latency.sh --status` |
 | Apply low-latency host settings | `sudo bin/tune-low-latency.sh --apply` |
 | Start service | `docker compose up -d` |

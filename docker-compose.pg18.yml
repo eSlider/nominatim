@@ -1,0 +1,53 @@
+services:
+  nominatim:
+    container_name: nominatim-pg18
+    image: ${NOMINATIM_PG18_IMAGE:-nominatim:5.2-pg18}
+    restart: unless-stopped
+    init: true
+    stop_grace_period: ${NOMINATIM_STOP_GRACE_PERIOD:-2m}
+    ports:
+      - "${NOMINATIM_PORT:-8081}:8080"
+    shm_size: ${NOMINATIM_SHM_SIZE:-32g}
+    ulimits:
+      nofile:
+        soft: ${NOMINATIM_NOFILE:-1048576}
+        hard: ${NOMINATIM_NOFILE:-1048576}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS --max-time 10 http://127.0.0.1:8080/status >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 10m
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    environment:
+      PBF_PATH: ${PBF_PATH}
+      REPLICATION_URL: ${REPLICATION_URL}
+      REPLICATION_UPDATE_INTERVAL: ${REPLICATION_UPDATE_INTERVAL:-86400}
+      REPLICATION_RECHECK_INTERVAL: ${REPLICATION_RECHECK_INTERVAL:-900}
+      UPDATE_MODE: ${UPDATE_MODE:-none}
+      IMPORT_STYLE: ${IMPORT_STYLE:-full}
+      IMPORT_WIKIPEDIA: ${IMPORT_WIKIPEDIA:-true}
+      FREEZE: ${FREEZE:-false}
+      REVERSE_ONLY: ${REVERSE_ONLY:-false}
+      WARMUP_ON_STARTUP: ${WARMUP_ON_STARTUP:-true}
+      THREADS: ${THREADS:-20}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-14}
+      NOMINATIM_PASSWORD: ${NOMINATIM_PASSWORD:-changeme}
+      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-16GB}
+      POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-48GB}
+      POSTGRES_MAINTENANCE_WORK_MEM: ${POSTGRES_MAINTENANCE_WORK_MEM:-10GB}
+      POSTGRES_AUTOVACUUM_WORK_MEM: ${POSTGRES_AUTOVACUUM_WORK_MEM:-2GB}
+      POSTGRES_WORK_MEM: ${POSTGRES_WORK_MEM:-50MB}
+      POSTGRES_SYNCHRONOUS_COMMIT: ${POSTGRES_SYNCHRONOUS_COMMIT:-off}
+      POSTGRES_MAX_WAL_SIZE: ${POSTGRES_MAX_WAL_SIZE:-2GB}
+      POSTGRES_CHECKPOINT_TIMEOUT: ${POSTGRES_CHECKPOINT_TIMEOUT:-15min}
+      POSTGRES_CHECKPOINT_COMPLETION_TARGET: ${POSTGRES_CHECKPOINT_COMPLETION_TARGET:-0.9}
+      POSTGRES_MAX_CONNECTIONS: ${POSTGRES_MAX_CONNECTIONS:-200}
+    volumes:
+      - ./var-pg18/lib/postgresql:/var/lib/postgresql/18/main
+      - ./var-pg18/osm:/nominatim/data
+      - ./var-pg18/nominatim/flatnode:/nominatim/flatnode

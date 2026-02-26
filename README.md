@@ -23,11 +23,15 @@ sudo apt install -y aria2
 
 ```
 .
-├── docker-compose.yml        # Service definition
-├── .env.example              # Configuration template
+├── docker-compose.yml        # PG16 profile (current)
+├── docker-compose.pg18.yml   # PG18 profile (optimized compose)
+├── .env.example              # PG16 configuration template
+├── .env.pg18.example         # PG18 configuration template
 ├── bin/
 │   ├── download-planet.sh            # Direct HTTP downloader (aria2)
-│   └── watch-download-start-import.sh # 10-min watcher, auto-starts import
+│   ├── watch-download-start-import.sh # 10-min watcher, auto-starts import
+│   ├── init-pg18.sh                 # End-to-end PG18 bootstrap
+│   └── build-pg18-image.sh          # Build custom PG18 image
 ├── etc/
 │   └── nominatim/            # Config overrides (future use)
 └── var/                      # ⛔ gitignored — all runtime data
@@ -109,6 +113,46 @@ curl "http://localhost:8080/search?q=Eiffel+Tower&format=jsonv2"
 # Reverse geocoding test
 curl "http://localhost:8080/reverse?lat=48.8584&lon=2.2945&format=jsonv2"
 ```
+
+
+## PostgreSQL 18 profile (migration path)
+
+`docker-compose.pg18.yml` is an optimized migration profile that keeps your active
+PG16 deployment untouched. It uses separate state directories under `./var-pg18/`.
+
+### Build PG18 image
+
+```bash
+bin/build-pg18-image.sh
+```
+
+This builds `nominatim:5.2-pg18` by patching upstream `mediagis/nominatim-docker`
+for PostgreSQL 18 paths/packages.
+
+### Configure and run PG18 profile
+
+```bash
+cp .env.pg18.example .env.pg18
+# edit .env.pg18 (password, ports, tuning)
+
+# end-to-end bootstrap: torrent download -> compose up -> wait for API
+bin/init-pg18.sh
+```
+
+Or manually:
+
+```bash
+docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d
+```
+
+### PG18 compose optimizations
+
+The PG18 compose profile enables:
+- `init: true` and `stop_grace_period` for cleaner process shutdown
+- high `ulimits.nofile` for concurrent API usage
+- explicit `healthcheck` on `/status`
+- log rotation (`max-size`, `max-file`)
+- larger shared memory via `NOMINATIM_SHM_SIZE`
 
 ## Enabling updates
 
