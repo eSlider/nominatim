@@ -1,0 +1,9 @@
+# Data directories (large binary/DB files)
+var/
+
+# Environment config (may contain passwords)
+.env
+
+# OSM data files
+*.osm.pbf
+*.osm.pbf.aria2

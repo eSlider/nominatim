@@ -1,0 +1,32 @@
+---
+description: Nominatim geocoding service — Docker Compose project
+globs: **/*
+alwaysApply: true
+---
+
+# Nominatim project rules
+
+## Context exclusion
+
+Never read, index, or include files under `var/`.
+This directory contains hundreds of GB of binary PostgreSQL data,
+OSM PBF extracts, and flatnode files. They will break context windows.
+
+## Project structure
+
+- `docker-compose.yml` — single-service compose (mediagis/nominatim:5.2)
+- `.env.example` — all configuration variables with defaults
+- `.env` — active config (gitignored, may contain secrets)
+- `bin/` — operational scripts (download-planet.sh)
+- `etc/nominatim/` — config overrides placeholder
+- `var/` — all runtime data (gitignored, never read)
+- `AGENTS.md` — operational guide for AI agents
+- `README.md` — human documentation
+
+## When editing
+
+- Configuration changes go in `.env` / `.env.example`
+- Volume paths are relative bind mounts under `./var/`
+- PostgreSQL tuning is via environment variables, not config files
+- The container bundles PostgreSQL + Nominatim in one image
+- Import is triggered automatically on first `docker compose up`
