@@ -117,16 +117,35 @@ pattern = re.compile(
     r"Way\((\d+)k\s+([0-9.]+)k/s\) "
     r"Relation\((\d+)\s+([0-9.]+)/s\)"
 )
+ingest_matches = list(pattern.finditer(text))
 rows = [
-    (int(a) * 1000, float(b) * 1000, int(c) * 1000, float(d) * 1000, int(e), float(f))
-    for a, b, c, d, e, f in pattern.findall(text)
+    (
+        int(m.group(1)) * 1000,
+        float(m.group(2)) * 1000,
+        int(m.group(3)) * 1000,
+        float(m.group(4)) * 1000,
+        int(m.group(5)),
+        float(m.group(6)),
+        m.start(),
+    )
+    for m in ingest_matches
 ]
 
-if not rows:
-    print("No osm2pgsql progress lines found yet.")
-    sys.exit(0)
-
-node, node_rate, way, way_rate, relation, relation_rate = rows[-1]
+post_pattern = re.compile(
+    r"Done\s+(\d+)\s+in\s+(\d+)\s+@\s+([0-9.]+)\s+per second\s+-\s+(.+?)\s+ETA \(seconds\):\s+([0-9.]+)"
+)
+post_matches = list(post_pattern.finditer(text))
+post_rows = [
+    (
+        int(m.group(1)),
+        int(m.group(2)),
+        float(m.group(3)),
+        m.group(4).strip(),
+        float(m.group(5)),
+        m.start(),
+    )
+    for m in post_matches
+]
 
 def fmt_pct(done: int, total: int) -> str:
     if total <= 0:
@@ -155,41 +174,72 @@ def fmt_eta(seconds: float) -> str:
         return f"{minutes}m {secs}s"
     return f"{secs}s"
 
-node_remaining = max(total_nodes - node, 0)
-way_remaining = max(total_ways - way, 0)
-relation_remaining = max(total_relations - relation, 0)
+if not rows and not post_rows:
+    print("No import progress markers found yet.")
+    sys.exit(0)
 
-node_eta = eta_seconds(node_remaining, node_rate)
-way_eta = eta_seconds(way_remaining, way_rate)
-relation_eta = eta_seconds(relation_remaining, relation_rate)
+latest_ingest_pos = rows[-1][6] if rows else -1
+latest_post_pos = post_rows[-1][5] if post_rows else -1
+post_is_newest = latest_post_pos > latest_ingest_pos
 
-# Full import scenarios (heuristic).
-full_optimistic = node_eta + way_eta
-full_medium = node_eta + way_eta + eta_seconds(relation_remaining, 2000.0)
-full_conservative = node_eta + way_eta + eta_seconds(relation_remaining, 500.0) + 4 * 3600
+if rows:
+    node, node_rate, way, way_rate, relation, relation_rate, _ = rows[-1]
+    node_remaining = max(total_nodes - node, 0)
+    way_remaining = max(total_ways - way, 0)
+    relation_remaining = max(total_relations - relation, 0)
+    node_eta = eta_seconds(node_remaining, node_rate)
+    way_eta = eta_seconds(way_remaining, way_rate)
+    relation_eta = eta_seconds(relation_remaining, relation_rate)
 
-print(
-    "Latest: "
-    f"Node({node // 1000}k {node_rate / 1000:.1f}k/s) "
-    f"Way({way // 1000}k {way_rate / 1000:.2f}k/s) "
-    f"Relation({relation} {relation_rate:.1f}/s)"
-)
-print(
-    f"Node: {node}/{total_nodes} ({fmt_pct(node, total_nodes)}) "
-    f"ETA={fmt_eta(node_eta)}"
-)
-print(
-    f"Way: {way}/{total_ways} ({fmt_pct(way, total_ways)}) "
-    f"ETA={fmt_eta(way_eta)}"
-)
-print(
-    f"Relation: {relation}/{total_relations} ({fmt_pct(relation, total_relations)}) "
-    f"ETA={fmt_eta(relation_eta)}"
-)
-print(
-    "Full ETA (heuristic): "
-    f"optimistic={fmt_eta(full_optimistic)}, "
-    f"medium={fmt_eta(full_medium)}, "
-    f"conservative={fmt_eta(full_conservative)}"
-)
+    # Full ETA scenarios (heuristic, ingest stage only).
+    full_optimistic = node_eta + way_eta
+    full_medium = node_eta + way_eta + eta_seconds(relation_remaining, 2000.0)
+    full_conservative = node_eta + way_eta + eta_seconds(relation_remaining, 500.0) + 4 * 3600
+
+if post_is_newest:
+    done, elapsed, rate, task, task_eta, _ = post_rows[-1]
+    print("Phase: post-processing")
+    print(f"Task: {task}")
+    print(
+        f"Task progress: done={done} elapsed={elapsed}s rate={rate:.3f}/s "
+        f"ETA={fmt_eta(task_eta)}"
+    )
+    if rows:
+        print(
+            "Ingest snapshot (completed/stale): "
+            f"Node={fmt_pct(node, total_nodes)} "
+            f"Way={fmt_pct(way, total_ways)} "
+            f"Relation={fmt_pct(relation, total_relations)}"
+        )
+    print(
+        "Full ETA (current task-based): "
+        f"best={fmt_eta(task_eta)}, "
+        f"conservative={fmt_eta(task_eta + 4 * 3600)}"
+    )
+else:
+    print("Phase: ingest")
+    print(
+        "Latest: "
+        f"Node({node // 1000}k {node_rate / 1000:.1f}k/s) "
+        f"Way({way // 1000}k {way_rate / 1000:.2f}k/s) "
+        f"Relation({relation} {relation_rate:.1f}/s)"
+    )
+    print(
+        f"Node: {node}/{total_nodes} ({fmt_pct(node, total_nodes)}) "
+        f"ETA={fmt_eta(node_eta)}"
+    )
+    print(
+        f"Way: {way}/{total_ways} ({fmt_pct(way, total_ways)}) "
+        f"ETA={fmt_eta(way_eta)}"
+    )
+    print(
+        f"Relation: {relation}/{total_relations} ({fmt_pct(relation, total_relations)}) "
+        f"ETA={fmt_eta(relation_eta)}"
+    )
+    print(
+        "Full ETA (heuristic): "
+        f"optimistic={fmt_eta(full_optimistic)}, "
+        f"medium={fmt_eta(full_medium)}, "
+        f"conservative={fmt_eta(full_conservative)}"
+    )
 PY
