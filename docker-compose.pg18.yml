@@ -4,22 +4,26 @@ services:
     image: ${NOMINATIM_PG18_IMAGE:-nominatim:5.2-pg18}
     restart: unless-stopped
     init: true
-    stop_grace_period: ${NOMINATIM_STOP_GRACE_PERIOD:-2m}
+    #stop_grace_period: ${NOMINATIM_STOP_GRACE_PERIOD:-2m}
     ports:
       - "${NOMINATIM_PORT:-8081}:8080"
-    shm_size: ${NOMINATIM_SHM_SIZE:-32g}
+    shm_size: ${NOMINATIM_SHM_SIZE:-48g}
     ulimits:
       nofile:
         soft: ${NOMINATIM_NOFILE:-1048576}
         hard: ${NOMINATIM_NOFILE:-1048576}
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS --max-time 10 http://127.0.0.1:8080/status >/dev/null || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 20
-      start_period: 10m
+    #    healthcheck:
+    #      test:
+    #        [
+    #          "CMD-SHELL",
+    #          "curl -fsS --max-time 10 http://127.0.0.1:8080/status >/dev/null || exit 1",
+    #        ]
+    #      interval: 30s
+    #      timeout: 10s
+    #      retries: 20
+    #      start_period: 168h
     logging:
-      driver: json-file
+      driver: local
       options:
         max-size: "50m"
         max-file: "5"

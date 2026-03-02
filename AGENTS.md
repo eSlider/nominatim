@@ -38,6 +38,8 @@ Including these in context will fail or produce garbage.
 | Bootstrap PG18 profile | `bin/init-pg18.sh` |
 | Start PG18 profile manually | `THREADS=$(nproc) docker compose --env-file .env.pg18 -f docker-compose.pg18.yml up -d` |
 | Check PG18 API | `curl http://localhost:8081/status` |
+| PG18 status and ETA | `bin/status.sh --pg18` |
+| Log restart causes (run in bg) | `nohup bin/watch-restart-events.sh >/dev/null 2>&1 &` |
 | Enable PG18 updates | Set `UPDATE_MODE=continuous` in `.env.pg18`, then restart PG18 compose |
 | Check low-latency host settings | `bin/tune-low-latency.sh --status` |
 | Apply low-latency host settings | `sudo bin/tune-low-latency.sh --apply` |
